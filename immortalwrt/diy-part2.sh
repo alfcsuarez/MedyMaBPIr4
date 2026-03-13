@@ -17,3 +17,11 @@ if ! grep -q '_FORTIFY_SOURCE=0' package/libs/mbedtls/Makefile; then
     echo 'TARGET_CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0' >> package/libs/mbedtls/Makefile
   fi
 fi
+
+# Fix mtkhqos_util Makefile: remove non-standard VERSION field that uses $(REVISION),
+# which produces a version like "1-r27419-ab3b3ae26d" that is invalid for APK
+# (APK requires the release suffix to be purely numeric, e.g. "1-r1").
+# Removing the override lets the build system use the standard PKG_VERSION-rPKG_RELEASE format.
+if [ -f package/openwrt-packages/mtkhqos_util/Makefile ]; then
+  sed -i '/VERSION:=\$(PKG_RELEASE)-\$(REVISION)/d' package/openwrt-packages/mtkhqos_util/Makefile
+fi
