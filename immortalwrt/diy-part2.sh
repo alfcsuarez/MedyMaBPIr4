@@ -25,3 +25,21 @@ fi
 if [ -f package/openwrt-packages/mtkhqos_util/Makefile ]; then
   sed -i '/VERSION:=\$(PKG_RELEASE)-\$(REVISION)/d' package/openwrt-packages/mtkhqos_util/Makefile
 fi
+
+# Fix fibocom-dial: GCC 14 treats implicit function declarations as errors.
+# The package calls functions across compilation units (main.c <-> QMIThread.c)
+# without proper forward declarations in QMIThread.h:
+#   - requestGetSIMCardNumber, requestSimBindSubscription_NAS_WMS,
+#     requestSimBindSubscription_WDS_DMS_QOS (defined in QMIThread.c, used in main.c)
+#   - get_private_gateway (defined in main.c, used in QMIThread.c)
+# Also fix 'return ;' (return with no value) in void* thread_socket_server in main.c.
+FIBOCOM_QMITHREAD_H="package/openwrt-packages/wwan/fibocom-dial/src/QMIThread.h"
+if [ -f "$FIBOCOM_QMITHREAD_H" ]; then
+  sed -i '$i extern int requestGetSIMCardNumber(PROFILE_T *profile);' "$FIBOCOM_QMITHREAD_H"
+  sed -i '$i extern int requestSimBindSubscription_NAS_WMS(void);' "$FIBOCOM_QMITHREAD_H"
+  sed -i '$i extern int requestSimBindSubscription_WDS_DMS_QOS(void);' "$FIBOCOM_QMITHREAD_H"
+  sed -i '$i extern int get_private_gateway(char *outgateway);' "$FIBOCOM_QMITHREAD_H"
+fi
+if [ -f package/openwrt-packages/wwan/fibocom-dial/src/main.c ]; then
+  sed -i 's/return ;/return NULL;/g' package/openwrt-packages/wwan/fibocom-dial/src/main.c
+fi
