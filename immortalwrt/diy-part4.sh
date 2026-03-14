@@ -59,18 +59,28 @@ fi
 # inner Makefile's += appends -Werror to the toolchain flags.
 # Fix: override Build/Compile in the outer OpenWrt Makefile to strip -Werror from
 # the downloaded source's Makefile before invoking the default compile step.
+# Guard on 'define Build/Compile' (not 'Werror') to avoid being fooled by the
+# word Werror appearing in upstream comments or a partial previous patch run.
+# Use python3 to inject the block so that literal tab characters are preserved
+# (awk -v strips tabs from multi-line variable values, breaking Makefile syntax).
 QUECTEL_OUTER_MK="package/community/5G-Modem-Support/quectel_cm_5G/Makefile"
-if [ -f "$QUECTEL_OUTER_MK" ] && ! grep -q 'Werror' "$QUECTEL_OUTER_MK"; then
-  # Build the multi-line Makefile block to insert before $(eval ...)
-  COMPILE_BLOCK="$(printf '%s\n' \
-    'define Build/Compile' \
-    '	$$(SED) '"'"'s/-Werror//g'"'"' $$(PKG_BUILD_DIR)/Makefile' \
-    '	$$(call Build/Compile/Default,)' \
-    'endef' \
-    '')"
-  # Use awk to insert the block before the $(eval line (sed struggles with
-  # multi-line inserts containing tabs and dollar signs).
-  awk -v block="$COMPILE_BLOCK" '/\$\(eval \$\(call BuildPackage/{print block}{print}' \
-    "$QUECTEL_OUTER_MK" > "${QUECTEL_OUTER_MK}.tmp" && \
-    mv "${QUECTEL_OUTER_MK}.tmp" "$QUECTEL_OUTER_MK"
+if [ -f "$QUECTEL_OUTER_MK" ] && ! grep -q 'define Build/Compile' "$QUECTEL_OUTER_MK"; then
+  python3 - "$QUECTEL_OUTER_MK" <<'PYEOF'
+import sys, re
+path = sys.argv[1]
+content = open(path).read()
+block = (
+    "define Build/Compile\n"
+    "\t$(SED) 's/-Werror//g' $(PKG_BUILD_DIR)/Makefile\n"
+    "\t$(call Build/Compile/Default,)\n"
+    "endef\n\n"
+)
+if 'define Build/Compile' not in content:
+    content = re.sub(
+        r'(\$\(eval \$\(call BuildPackage)',
+        block + r'\1',
+        content
+    )
+    open(path, 'w').write(content)
+PYEOF
 fi
