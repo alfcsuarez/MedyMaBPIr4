@@ -40,6 +40,6 @@ if [ -f "$FIBOCOM_QMITHREAD_H" ] && ! grep -q 'requestGetSIMCardNumber' "$FIBOCO
   sed -i '$i extern int requestSimBindSubscription_WDS_DMS_QOS(void);' "$FIBOCOM_QMITHREAD_H"
   sed -i '$i extern int get_private_gateway(char *outgateway);' "$FIBOCOM_QMITHREAD_H"
 fi
-if [ -f package/community/5G-Modem-Support/fibocom-dial/src/main.c ]; then
-  sed -i 's/return ;/return NULL;/g' package/community/5G-Modem-Support/fibocom-dial/src/main.c
+if [ -f "${FIBOCOM_DIAL_SRC}/main.c" ]; then
+  sed -i 's/return ;/return NULL;/g' "${FIBOCOM_DIAL_SRC}/main.c"
 fi
