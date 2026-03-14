@@ -51,3 +51,26 @@ if [ -f "$FIBOCOM_QMIMSG" ] && grep -q 'char \*\*idproduct)' "$FIBOCOM_QMIMSG"; 
   sed -i 's/char \*\*idproduct)/char *idproduct)/g' "$FIBOCOM_QMIMSG"
   sed -i 's/&getidproduct)/getidproduct)/g' "$FIBOCOM_QMIMSG"
 fi
+
+# Fix quectel_cm_5G: the upstream (inner) Makefile uses CFLAGS += -Werror which,
+# combined with GCC 14's stricter warnings (e.g. -Wunused-result for unchecked
+# asprintf return values in atc.c and quectel-atc-proxy.c), turns warnings into
+# hard build errors.  OpenWrt passes CFLAGS as an environment variable, so the
+# inner Makefile's += appends -Werror to the toolchain flags.
+# Fix: override Build/Compile in the outer OpenWrt Makefile to strip -Werror from
+# the downloaded source's Makefile before invoking the default compile step.
+QUECTEL_OUTER_MK="package/community/5G-Modem-Support/quectel_cm_5G/Makefile"
+if [ -f "$QUECTEL_OUTER_MK" ] && ! grep -q 'Werror' "$QUECTEL_OUTER_MK"; then
+  # Build the multi-line Makefile block to insert before $(eval ...)
+  COMPILE_BLOCK="$(printf '%s\n' \
+    'define Build/Compile' \
+    '	$$(SED) '"'"'s/-Werror//g'"'"' $$(PKG_BUILD_DIR)/Makefile' \
+    '	$$(call Build/Compile/Default,)' \
+    'endef' \
+    '')"
+  # Use awk to insert the block before the $(eval line (sed struggles with
+  # multi-line inserts containing tabs and dollar signs).
+  awk -v block="$COMPILE_BLOCK" '/\$\(eval \$\(call BuildPackage/{print block}{print}' \
+    "$QUECTEL_OUTER_MK" > "${QUECTEL_OUTER_MK}.tmp" && \
+    mv "${QUECTEL_OUTER_MK}.tmp" "$QUECTEL_OUTER_MK"
+fi
