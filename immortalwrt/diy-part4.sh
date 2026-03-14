@@ -36,3 +36,18 @@ fi
 if [ -f "${FIBOCOM_DIAL_SRC}/main.c" ]; then
   sed -i 's/return ;/return NULL;/g' "${FIBOCOM_DIAL_SRC}/main.c"
 fi
+
+# Fix fibocom-dial: GCC 14 rejects incompatible pointer types as hard errors in
+# fibo_qmimsg_server.c. The function qmidevice_detect declares its second parameter
+# as 'char **idproduct' but:
+#   1. The call site passes '&getidproduct' where getidproduct is char[5], giving
+#      type 'char (*)[5]' — not 'char **'.
+#   2. Inside the function, 'idproduct' (char**) is passed directly to strncpy
+#      which expects 'char*'.
+# Fix: change the parameter to 'char *idproduct' and pass 'getidproduct' directly
+# (array naturally decays to char*).
+FIBOCOM_QMIMSG="${FIBOCOM_DIAL_SRC}/fibo_qmimsg_server.c"
+if [ -f "$FIBOCOM_QMIMSG" ] && grep -q 'char \*\*idproduct)' "$FIBOCOM_QMIMSG"; then
+  sed -i 's/char \*\*idproduct)/char *idproduct)/g' "$FIBOCOM_QMIMSG"
+  sed -i 's/&getidproduct)/getidproduct)/g' "$FIBOCOM_QMIMSG"
+fi
