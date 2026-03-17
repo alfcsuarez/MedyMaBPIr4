@@ -63,7 +63,12 @@ jobs:
         cd openwrt
         rm -rf feeds.conf.default
         cp -f $GITHUB_WORKSPACE/patches/filogic/feeds.conf.default feeds.conf.default 
-
+        
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24.9'
+      
     - name: Update & install feeds
       working-directory: ./openwrt
       run: |
