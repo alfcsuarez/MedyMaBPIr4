@@ -13,7 +13,7 @@ env:
   DIY_P2_SH: immortalwrt/diy-part4.sh
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
-  TZ: Asia/Shanghai
+  TZ: Europe/Madrid
   OPENWRT_NAME: immortalwrt
   OPENWRT_DEVICE: mediatek
   CCACHE_DIR: /tmp/ccache
