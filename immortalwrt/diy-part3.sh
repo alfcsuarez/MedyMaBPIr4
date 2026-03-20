@@ -18,14 +18,17 @@ rm -rf feeds/luci/applications/luci-app-argon-config
 mkdir package/community
 pushd package/community
 git clone --depth=1 https://github.com/fw876/helloworld
-git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall
-git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall-packages
+git clone --depth=1 https://github.com/Openwrt-Passwall/openwrt-passwall
+git clone --depth=1 https://github.com/Openwrt-Passwall/openwrt-passwall-packages
 git clone --depth=1 https://github.com/nikkinikki-org/OpenWrt-nikki
-merge_package https://github.com/DHDAXCW/dhdaxcw-app dhdaxcw-app/luci-app-adguardhome
 git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon
 git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config
-merge_package "-b Immortalwrt https://github.com/shidahuilang/openwrt-package" openwrt-package/relevance/ddnsto
-merge_package "-b Immortalwrt https://github.com/shidahuilang/openwrt-package" openwrt-package/luci-app-ddnsto
+git clone --depth=1 https://github.com/Siriling/5G-Modem-Support
+# merge_package https://github.com/kenzok8/jell jell/luci-app-fan
+merge_package https://github.com/DHDAXCW/dhdaxcw-app dhdaxcw-app/luci-app-adguardhome
+merge_package https://github.com/kenzok8/jell jell/wrtbwmon
+merge_package "-b ddnsto-beta https://github.com/linkease/nas-packages-luci" nas-packages-luci/luci/luci-app-ddnsto
+merge_package "-b ddnsto-beta https://github.com/linkease/nas-packages" nas-packages/network/services/ddnsto
 popd
 
 # add luci-app-mosdns
