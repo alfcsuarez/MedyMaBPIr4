@@ -62,6 +62,12 @@ jobs:
         rm -rf feeds.conf.default
         cp -f $GITHUB_WORKSPACE/patches/filogic/feeds.conf.default feeds.conf.default 
 
+    - name: Cache
+      uses: MedyMa/cachewrtbuild@main
+      with:
+        ccache: 'true'
+        prefix: ${{ github.workspace }}/openwrt
+
     - name: Update & install feeds
       working-directory: ./openwrt
       run: |
@@ -127,7 +133,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
         
     - name: Publish to release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2.6.1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
